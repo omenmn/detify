@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# CHANGE ALL THESE PATHS TO YOUR DIRECOTRY PATH
+source /mnt/TB/Work/projects/detify/venv/bin/activate
+python3 /mnt/TB/Work/projects/detify/init.py "$@"
+
