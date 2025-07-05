@@ -1,24 +1,103 @@
-# detify
+# 📀 Detify
 
-fetch current playing song from spotify and download it inside music folder.
+Detify is a CLI tool that automatically downloads your currently playing Spotify track using spotdl, with both manual and auto-download modes.
 
-> [!CAUTION]
-> I HAVE USED PATHS FOR MY PC. CHANGE PATHS ACCORDING TO YOUR PC
+It supports:
 
-# Installation
+- detify download → download the current track
+- detify auto → auto-detect and download new tracks when they change
+- detify → run a custom Python script (init.py)
+- Tracks saved in your Music folder by default (~/Music)
 
-- STEP 1: clone this directory into your pc using git.
+# 📦 Installation
 
-- STEP 2: copy `autodownload.bash`, `detify`, `hook.bash` to /usr/bin/ ( CHANGE ALL THE PATHS TO YOUR SPECIFIC PC OTHERWISE THE APP WONT WORK )
+Run the installer script:
 
-### hook
+```bash
+./install.sh
+```
 
-- run hook.bash using `hook.bash &` to auto download songs playing in spotify. ( CHANGE TO YOUR MUSIC DIRECTORY IN THE SCIPRT )
+What it does:
 
-### autodownload
+- Creates a virtual environment in: ~/.local/share/detify/venv
+- Installs dependencies: spotdl, dbus-python
+- Copies the init.py script to the app folder
+- Installs the detify CLI to /usr/local/bin
+- Ensures ~/Music exists
 
-- detect your current song playing and download it inside the music directory
+You can now run detify from anywhere.
 
-### detify
+# 🛠 Usage
 
-- returns current playing spotify song url
+## ✅ Download current track
+
+```bash
+detify download
+```
+
+Calls your `init.py` script to check if the song is already downloaded. If not, downloads it using `spotdl`.
+
+## 🔄 Auto-download when track changes
+
+```bash
+detify auto
+```
+
+Listens to `playerctl` via `dbus-monitor`, detects track changes, waits to confirm (debounced), and then downloads.
+
+## 🐍 Run custom Python logic
+
+```bash
+detify
+```
+
+Runs the `init.py` script inside the virtual environment with no arguments.
+
+# 🧪 Dev Workflow
+
+If you're developing locally:
+
+```bash
+# Update main script
+nano detify
+
+# Update logic
+nano init.py
+
+# Re-run installer
+./install.sh
+```
+
+# 📝 Config
+
+Music folder is stored in:
+
+```bash
+~/.local/share/detify/config
+```
+
+To change the download directory:
+
+```bash
+echo "/custom/path/to/music" > ~/.local/share/detify/config
+```
+
+# 📚 Dependencies
+
+Installed via `pip` inside virtualenv:
+
+- [spotdl](https://github.com/spotDL/spotify-downloader) – Spotify downloader
+- dbus-python – used for dbus-monitor interaction
+
+System tools needed:
+
+- playerctl
+- dbus-monitor
+- python3, venv, pip
+
+🧹 Uninstall
+
+```bash
+sudo rm /usr/local/bin/detify
+rm -rf ~/.local/share/detify
+```

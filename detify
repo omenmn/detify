@@ -1,6 +1,85 @@
 #!/bin/bash
 
-# CHANGE ALL THESE PATHS TO YOUR DIRECOTRY PATH
-source /mnt/TB/Work/projects/detify/venv/bin/activate
-python3 /mnt/TB/Work/projects/detify/init.py "$@"
+APP_NAME="detify"
+APP_HOME="$HOME/.local/share/$APP_NAME"
+VENV="$APP_HOME/venv"
+INIT_SCRIPT="$APP_HOME/init.py"
+CONFIG_FILE="$APP_HOME/config"
+
+# Get music dir from config or default to ~/Music
+MUSIC_DIR=$(cat "$CONFIG_FILE" 2>/dev/null || echo "$HOME/Music")
+
+run_download() {
+  (
+    cd "$MUSIC_DIR" || exit 1
+
+    exists=$("$VENV/bin/python" "$INIT_SCRIPT" check)
+
+    if [[ "$exists" == "True" ]]; then
+      echo "✅ Already downloaded"
+    else
+      echo "⬇️  Downloading track..."
+      spotdl "$(detify)"
+    fi
+  )
+}
+
+# Show help
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+  echo "Usage: detify [download|auto]"
+  echo ""
+  echo "  download   → manually download current Spotify track"
+  echo "  auto       → monitor and auto-download new tracks"
+  echo "  (no args)  → run init.py inside venv"
+  exit 0
+fi
+
+# Download current track
+if [[ "$1" == "download" ]]; then
+  run_download
+
+# Auto-download based on track change
+elif [[ "$1" == "auto" ]]; then
+  (
+    DEBOUNCE_SECONDS=10
+    LAST_CONFIRMED_TRACK=""
+    PENDING_TRACK=""
+
+    get_current_track() {
+        ARTIST=$(playerctl --player=spotify metadata artist 2>/dev/null)
+        TITLE=$(playerctl --player=spotify metadata title 2>/dev/null)
+        echo "$ARTIST - $TITLE"
+    }
+
+    dbus-monitor "interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',arg0='org.mpris.MediaPlayer2.Player'" |
+    while read -r line; do
+        if echo "$line" | grep -q "Metadata"; then
+            CURRENT_TRACK=$(get_current_track)
+            [[ -z "$CURRENT_TRACK" ]] && continue
+            if [[ "$CURRENT_TRACK" == "$LAST_CONFIRMED_TRACK" ]]; then continue; fi
+
+            PENDING_TRACK="$CURRENT_TRACK"
+            (
+                sleep "$DEBOUNCE_SECONDS"
+                RECHECK_TRACK=$(get_current_track)
+                if [[ "$RECHECK_TRACK" == "$PENDING_TRACK" && "$RECHECK_TRACK" != "$LAST_CONFIRMED_TRACK" ]]; then
+                    echo "🎵 Confirmed new track: $RECHECK_TRACK"
+                    spotdl "$RECHECK_TRACK"
+                    LAST_CONFIRMED_TRACK="$RECHECK_TRACK"
+                fi
+            ) &
+        fi
+    done
+  ) &
+
+# Default: run init.py
+else
+  if [[ -f "$VENV/bin/activate" ]]; then
+    source "$VENV/bin/activate"
+    python "$INIT_SCRIPT"
+  else
+    echo "❌ Virtual environment not found. Try reinstalling."
+    exit 1
+  fi
+fi
 

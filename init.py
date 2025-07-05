@@ -111,6 +111,7 @@ if __name__ == "__main__":
     if (sys.argv.__len__() > 1):
         if (sys.argv[1] == 'check'):
             print(check_song_exists())
+            exit()
     if check_song_exists():
         exit()
     else:
