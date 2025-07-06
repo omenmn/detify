@@ -9,6 +9,8 @@ CONFIG_FILE="$APP_HOME/config"
 # Get music dir from config or default to ~/Music
 MUSIC_DIR=$(cat "$CONFIG_FILE" 2>/dev/null || echo "$HOME/Music")
 
+cd $MUSIC_DIR
+
 run_download() {
   (
     cd "$MUSIC_DIR" || exit 1
@@ -38,9 +40,11 @@ fi
 if [[ "$1" == "download" ]]; then
   run_download
 
-# Auto-download based on track change
 elif [[ "$1" == "auto" ]]; then
   (
+    LOG_FILE="$APP_HOME/auto.log"
+    echo "🔁 Starting auto-download at $(date)" >> "$LOG_FILE"
+
     DEBOUNCE_SECONDS=10
     LAST_CONFIRMED_TRACK=""
     PENDING_TRACK=""
@@ -63,8 +67,14 @@ elif [[ "$1" == "auto" ]]; then
                 sleep "$DEBOUNCE_SECONDS"
                 RECHECK_TRACK=$(get_current_track)
                 if [[ "$RECHECK_TRACK" == "$PENDING_TRACK" && "$RECHECK_TRACK" != "$LAST_CONFIRMED_TRACK" ]]; then
-                    echo "🎵 Confirmed new track: $RECHECK_TRACK"
-                    spotdl "$RECHECK_TRACK"
+                    echo "🎵 Confirmed: $RECHECK_TRACK" | tee -a "$LOG_FILE"
+                    
+                    TRACK_NAME=$("$VENV/bin/python" "$INIT_SCRIPT")
+                    echo "⬇️  Downloading: $TRACK_NAME" | tee -a "$LOG_FILE"
+
+                    spotdl "$TRACK_NAME" >> "$LOG_FILE" 2>&1
+
+                    echo "✅ Done: $TRACK_NAME at $(date)" | tee -a "$LOG_FILE"
                     LAST_CONFIRMED_TRACK="$RECHECK_TRACK"
                 fi
             ) &
