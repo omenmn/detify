@@ -2,6 +2,16 @@
 
 Detify is a CLI tool that automatically downloads your currently playing Spotify track using spotdl, with both manual and auto-download modes.
 
+# Examples
+
+### download
+
+![video](assets/download.mkv)
+
+### auto
+
+![video](assets/auto.mkv)
+
 It supports:
 
 - detify download → download the current track
