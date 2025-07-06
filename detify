@@ -72,8 +72,7 @@ elif [[ "$1" == "auto" ]]; then
                     TRACK_NAME=$("$VENV/bin/python" "$INIT_SCRIPT")
                     echo "⬇️  Downloading: $TRACK_NAME" | tee -a "$LOG_FILE"
 
-                    spotdl "$TRACK_NAME" >> "$LOG_FILE" 2>&1
-
+                    run_download
                     echo "✅ Done: $TRACK_NAME at $(date)" | tee -a "$LOG_FILE"
                     LAST_CONFIRMED_TRACK="$RECHECK_TRACK"
                 fi
