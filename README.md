@@ -6,11 +6,17 @@ Detify is a CLI tool that automatically downloads your currently playing Spotify
 
 ### download
 
-![video](assets/download.mp4)
+
+https://github.com/user-attachments/assets/60b53984-329e-44c2-a30e-1eedcdac0bc4
+
+
 
 ### auto
 
-![video](assets/auto.mp4)
+
+
+https://github.com/user-attachments/assets/84c8de22-fc09-4b45-bf24-a643a19bde16
+
 
 It supports:
 
